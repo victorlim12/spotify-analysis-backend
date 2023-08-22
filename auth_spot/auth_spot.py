@@ -7,6 +7,10 @@ import webbrowser
 from dotenv import load_dotenv
 import jwt
 import json
+import secrets
+
+##import utils for decode
+from utils.utils import *
 
 ##Define blueprint to be registered in the main app
 ##AUTH route is mainly for spotify interfacing for oAuthV2 --> first interfacing with react client 
@@ -18,7 +22,6 @@ SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = f"http://localhost:{PORT}/auth/callback"
 SPOTIFY_SCOPES = 'user-read-email user-read-private user-top-read user-read-recently-played'  # Add other scopes if needed
-JWT_SECRET_KEY= os.getenv('JWT_SECRET_KEY')
 
 access_token=''
 
@@ -57,41 +60,45 @@ def callback():
     response = requests.post(token_url, data=data)
     token_data = response.json()
     access_token = token_data['access_token']
-    with open('airflow/shared_variable.json', 'w') as json_file:
+
+    with open('etl/shared_variable.json', 'w') as json_file:
         json.dump({'access_token': access_token}, json_file)
 
-    jwt_token = jwt.encode({"access_token": access_token}, JWT_SECRET_KEY, algorithm="HS256")
+    input_variables = {
+        "Accept" : "application/json",
+        "Content-Type" : "application/json",
+        "Authorization" : "Bearer {token}".format(token=access_token)
+    }
+    r = requests.get("https://api.spotify.com/v1/me/", headers = input_variables)
+    user_data = r.json()
+
+    ##store in json file
+    json_file_path = 'access_token.json'
+
+    try:
+    # Open the JSON file for reading
+        with open(json_file_path, 'r') as json_file:
+            user_token = json.load(json_file)
+    except FileNotFoundError:
+    # If the file doesn't exist, create an empty dictionary
+            user_token = {}
+    #randomly generate token for reference code
+    reference_code = secrets.token_hex(16)
+    user_token[reference_code]=access_token
+
+    #update values
+    with open('access_token.json', 'w') as json_file:
+        json.dump(user_token, json_file, indent=4)
+
+    payload = {"reference_token": reference_code, "user":user_data['display_name'], "email": user_data['email'] }
+
+    jwt_token = generate_token(payload)
+    decoded_token = verify_token(jwt_token)
 
     #might need to comment out
     session["jwt_token"]=jwt_token
 
     return jsonify({"jwt_token": jwt_token})
 
-@auth_spot.route('/recent')
-def get_most_recent():
-    jwt_token = session.get("jwt_token")
-
-    if jwt_token:
-        try:
-            # Decode and verify the JWT token
-            decoded_token = jwt.decode(jwt_token, JWT_SECRET_KEY, algorithms=["HS256"])
-            access_token = decoded_token.get("access_token")
-
-            if access_token:
-                headers = {"Authorization": f"Bearer {access_token}"}
-                response = requests.get("https://api.spotify.com/v1/me/player/recently-played", headers=headers)
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("items"):
-                        most_recent_track = data["items"][0]["track"]["name"]
-                        return f"Most Recently Played Track: {most_recent_track}"
-                    else:
-                        return "No recently played tracks found"
-        except jwt.ExpiredSignatureError:
-            return "JWT token expired"
-        except jwt.DecodeError:
-            return "Invalid JWT token"
-    else:
-        return "JWT token not found or invalid"
 
 

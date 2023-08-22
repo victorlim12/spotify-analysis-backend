@@ -1,5 +1,5 @@
 
-import Extract
+from etl import Extract
 import pandas as pd 
 
 # Set of Data Quality Checks Needed to Perform Before Loading
