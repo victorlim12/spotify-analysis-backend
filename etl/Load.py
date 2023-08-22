@@ -66,6 +66,7 @@ def Load_sqlite(access_token):
         sql_query_4 = """
             CREATE TABLE IF NOT EXISTS metric_table(
                 spotify_id VARCHAR(200),
+                song_name VARCHAR(200),
                 danceability FLOAT,
                 energy FLOAT,
                 key INTEGER,

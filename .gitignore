@@ -2,3 +2,6 @@ __pycache__
 .env
 *.json
 *.sqlite
+*.db
+etl/.DS_Store
+tracks_analytics.db

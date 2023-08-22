@@ -25,8 +25,6 @@ SPOTIFY_REDIRECT_URI = f"http://localhost:{PORT}/auth/callback"
 SPOTIFY_SCOPES = 'user-read-email user-read-private user-top-read user-read-recently-played'  # Add other scopes if needed
 json_file_path ='access_token.json'
 
-access_token=''
-
 #define function for each auth purpose
 @etl.route('/')
 def run_etl():
@@ -38,13 +36,12 @@ def run_etl():
             user_token = json.load(json_file)
             access_token= user_token[payload['reference_token']]
             response = Load_sqlite(access_token)
-            print(response.json['idk'])
+        if response.json["code"]==200:
+             return jsonify({'message': 'ETL completed, time to go query', 'code': 200})
+        else:
+            return jsonify({'message': f'ETL failed, error: {response.json["message"]}', 'code': 500})
     except Exception as e:
         return jsonify({'message': f'error found: {e}', 'code': 404})
-    if response.json["status"]==200:
-        return jsonify({'message': 'ETL completed, time to go query', 'code': 200})
-    else:
-        return jsonify({'message': f'ETL failed, error: {response.json["message"]}', 'code': 500})
     
 # @etl.route('/analytics')
 # def run_analytics();

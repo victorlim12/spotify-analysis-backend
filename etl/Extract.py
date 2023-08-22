@@ -66,12 +66,16 @@ def get_listen_history(token):
 
 #to create dataframe for song metrics
 def get_song_metrics(song_df, token):
+    print(song_df)
+    song_df= song_df[['spotify_id',"song_name"]]
+    print(song_df)
     id_list= song_df['spotify_id'].unique()
     response= metrics_query(id_list, token)
     #specifying which parameter to take:
     metric_df = pd.DataFrame(response, columns=["id","danceability","energy","key","loudness","tempo","liveness","speechiness","acousticness"])
     metric_df= metric_df.rename(columns={
         "id": "spotify_id"})
+    metric_df= pd.merge(song_df, metric_df, on='spotify_id',how='left')
     return metric_df
 
 #helper for query function
