@@ -18,14 +18,13 @@ def Load_sqlite(access_token):
         print(token)
         #Importing the songs_df from the Extract.py
         load_df=Extract.get_listen_history(token)
+        print(load_df)
         if(Transform.Data_Quality(load_df) == False):
             raise ("Failed at Data Validation")
         
         metric_df=Extract.get_song_metrics(load_df, token)
         Transformed_df=Transform.Transform_df(load_df)
         profile_df=Extract.get_user_profile(token)
-
-        print(metric_df)
 
         #Loading into Database
         engine = sqlalchemy.create_engine(DATABASE_LOCATION)

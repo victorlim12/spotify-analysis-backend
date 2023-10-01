@@ -35,6 +35,7 @@ def run_etl():
         with open(json_file_path, 'r') as json_file:
             user_token = json.load(json_file)
             access_token= user_token[payload['reference_token']]
+            print(access_token)
             response = Load_sqlite(access_token)
         if response.json["code"]==200:
              return jsonify({'message': 'ETL completed, time to go query', 'code': 200})
@@ -43,9 +44,7 @@ def run_etl():
     except Exception as e:
         return jsonify({'message': f'error found: {e}', 'code': 404})
     
-# @etl.route('/analytics')
-# def run_analytics();
-#     return jsonify({'message': 'ETL completed, time to go query', 'code': 200})
+
 
 
 
