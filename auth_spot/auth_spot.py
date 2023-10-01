@@ -11,6 +11,10 @@ import secrets
 
 ##import utils for decode
 from utils.utils import *
+from models.user import Account 
+from models.token import Token  
+
+from app import db
 
 ##Define blueprint to be registered in the main app
 ##AUTH route is mainly for spotify interfacing for oAuthV2 --> first interfacing with react client 
@@ -30,8 +34,15 @@ access_token=''
 def index():
     return "This is an example app"
 
-@auth_spot.route('/login')
+@auth_spot.route('/login', methods=['POST'])
 def login():
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    # Store username and password in session for later use
+    session['username'] = username
+    session['password'] = password
+
     authentication_request_params = {
         'response_type': 'code',
         'client_id': SPOTIFY_CLIENT_ID,
@@ -42,7 +53,7 @@ def login():
         }
 
     auth_url = 'https://accounts.spotify.com/authorize/?' + urllib.parse.urlencode(authentication_request_params)
-    return redirect(auth_url)
+    return jsonify({"jwt_token": auth_url})
 
 @auth_spot.route('/callback')
 def callback():
@@ -59,10 +70,31 @@ def callback():
 
     response = requests.post(token_url, data=data)
     token_data = response.json()
+    print(token_data)
     access_token = token_data['access_token']
+    refresh_token = token_data.get('refresh_token', None)
 
-    with open('etl/shared_variable.json', 'w') as json_file:
-        json.dump({'access_token': access_token}, json_file)
+    username = session.get('username')
+    password = session.get('password')
+    print(username)
+    username='test3'
+    password='test'
+
+    account = Account.query.filter_by(username=username).first()
+    if not account:
+        account = Account(username=username, password=password)
+        db.session.add(account)
+        db.session.commit()
+
+    user_id = account.id
+    token = Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user_id=user_id  # Use the user's ID to link the token to the user
+    )
+    
+    db.session.add(token)
+    db.session.commit()
 
     input_variables = {
         "Accept" : "application/json",
@@ -71,6 +103,7 @@ def callback():
     }
     r = requests.get("https://api.spotify.com/v1/me/", headers = input_variables)
     user_data = r.json()
+    print(user_data)
 
     ##store in json file
     json_file_path = 'access_token.json'

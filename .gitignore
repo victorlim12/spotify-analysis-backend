@@ -3,7 +3,6 @@ __pycache__
 *.json
 *.sqlite
 *.db
-etl/.DS_Store
+.DS_Store
 tracks_analytics.db
 logs
-.DS_Store
