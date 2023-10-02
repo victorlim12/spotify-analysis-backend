@@ -93,7 +93,6 @@ def callback():
     response = requests.post(token_url, data=data)
     token_data = response.json()
 
-    print(token_data)
     access_token = token_data['access_token']
     refresh_token = token_data.get('refresh_token', None)
 
@@ -125,7 +124,6 @@ def callback():
     }
     r = requests.get("https://api.spotify.com/v1/me/", headers = input_variables)
     user_data = r.json()
-    print(user_data)
 
     profile = Profile.query.filter_by(spotifyid=user_data.get("id")).first()
     if not profile:

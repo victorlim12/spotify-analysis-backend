@@ -3,6 +3,7 @@ import requests
 from datetime import datetime
 import datetime
 import json 
+import pytz
 
 def get_user_profile(token):
     input_variables = {
@@ -29,10 +30,12 @@ def get_listen_history(token, spotifyid):
         "Authorization" : "Bearer {token}".format(token=token)
     }
      
+    local_timezone = pytz.timezone('Asia/Singapore')
+    
+    # Get the current time in the local timezone
     today = datetime.datetime.now()
     yesterday = today - datetime.timedelta(days=2) #no of Days u want the data for)
     yesterday_unix_timestamp = int(yesterday.timestamp()) * 1000
-    print(yesterday_unix_timestamp)
     # Download all songs you've listened to "after yesterday", which means in the last 24 hours      
     response = requests.get("https://api.spotify.com/v1/me/player/recently-played?limit=50&after={time}".format(time=yesterday_unix_timestamp), headers = input_variables)
 
@@ -48,7 +51,10 @@ def get_listen_history(token, spotifyid):
         artist_names.append(song["track"]["album"]["artists"][0]["name"])
         song_names.append(song["track"]["name"])
         timestamps.append(song["played_at"][0:10])
-        played_at_list.append(song["played_at"])
+        played_at = datetime.datetime.strptime(song["played_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        played_at = played_at.replace(tzinfo=pytz.utc)  # Set the timezone of the timestamp to UTC
+        played_at = played_at.astimezone(local_timezone)  # Convert it to the local timezone
+        played_at_list.append(played_at.strftime("%Y-%m-%d %H:%M:%S"))
         song_id.append(song['track']["id"])
         
     # Prepare a dictionary in order to turn it into a pandas dataframe below       

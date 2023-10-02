@@ -35,11 +35,12 @@ def jwt_required_custom(fn):
 
 def refresh_access_token(token_record):
     from app import db
-    current_time = datetime.utcnow()
+    current_time = datetime.now()
 
     if token_record.token_expiration and current_time < token_record.token_expiration:
         # Token is still valid, no need to refresh
         return token_record.access_token
+    
 
     # Token has expired, refresh it using the refresh token
     token_url = "https://accounts.spotify.com/api/token"
