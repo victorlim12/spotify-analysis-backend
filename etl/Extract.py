@@ -22,7 +22,7 @@ def get_user_profile(token):
     
 
 # Creating an function to be used in other python files
-def get_listen_history(token): 
+def get_listen_history(token, spotifyid): 
     input_variables = {
         "Accept" : "application/json",
         "Content-Type" : "application/json",
@@ -33,18 +33,15 @@ def get_listen_history(token):
     yesterday = today - datetime.timedelta(days=2) #no of Days u want the data for)
     yesterday_unix_timestamp = int(yesterday.timestamp()) * 1000
     print(yesterday_unix_timestamp)
-    # yesterday_unix_timestamp= '1692514334000'
-    profile= get_user_profile(token)
     # Download all songs you've listened to "after yesterday", which means in the last 24 hours      
     response = requests.get("https://api.spotify.com/v1/me/player/recently-played?limit=50&after={time}".format(time=yesterday_unix_timestamp), headers = input_variables)
 
     data = response.json()
-    print(data)
     song_names = []
     artist_names = []
     played_at_list = []
     timestamps = []
-    spotify_id=[]
+    song_id=[]
 
     # Extracting only the relevant bits of data from the json object      
     for song in data["items"]:
@@ -52,32 +49,31 @@ def get_listen_history(token):
         song_names.append(song["track"]["name"])
         timestamps.append(song["played_at"][0:10])
         played_at_list.append(song["played_at"])
-        spotify_id.append(song['track']["id"])
+        song_id.append(song['track']["id"])
         
     # Prepare a dictionary in order to turn it into a pandas dataframe below       
     song_dict = {
-        "name": profile['name'][0],
+        "spotifyid": spotifyid,
         "song_name" : song_names,
         "artist_name": artist_names,
         "played_at" : played_at_list,
         "timestamp" : timestamps,
-        "spotify_id": spotify_id,
+        "song_id": song_id,
     }
-    song_df = pd.DataFrame(song_dict, columns = ["song_name", "artist_name", "played_at", "timestamp","name", "spotify_id"])
+    song_df = pd.DataFrame(song_dict, columns = ["song_name", "artist_name", "played_at", "timestamp","spotifyid", "song_id"])
+    print(song_df)
     return song_df
 
 #to create dataframe for song metrics
 def get_song_metrics(song_df, token):
-    print(song_df)
-    song_df= song_df[['spotify_id',"song_name"]]
-    print(song_df)
-    id_list= song_df['spotify_id'].unique()
+    song_df= song_df[['song_id',"song_name"]]
+    id_list= song_df['song_id'].unique()
     response= metrics_query(id_list, token)
     #specifying which parameter to take:
     metric_df = pd.DataFrame(response, columns=["id","danceability","energy","key","loudness","tempo","liveness","speechiness","acousticness"])
-    metric_df= metric_df.rename(columns={
-        "id": "spotify_id"})
-    metric_df= pd.merge(song_df, metric_df, on='spotify_id',how='left')
+    metric_df= metric_df.rename(columns={"id": "song_id"})
+    metric_df= pd.merge(song_df, metric_df, on='song_id',how='left')
+    metric_df= metric_df.drop_duplicates()
     return metric_df
 
 #helper for query function
@@ -87,9 +83,3 @@ def metrics_query(track_ids, token):
     response = requests.get(url, headers=headers)
     data = response.json()
     return data["audio_features"]
-
-
-# if __name__=='__main__':
-#     print(token)
-#     haha= get_listen_history()
-#     print(haha)

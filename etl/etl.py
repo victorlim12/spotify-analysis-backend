@@ -9,9 +9,10 @@ import jwt
 import json
 import secrets
 
-##import utils for decode
 from utils.utils import *
-from etl.Load import Load_sqlite
+from utils.utils import jwt_required_custom
+from flask_jwt_extended import create_access_token, get_jwt_identity
+from etl.Load_psql import Load_PSQL
 
 ##Define blueprint to be registered in the main app
 ##AUTH route is mainly for spotify interfacing for oAuthV2 --> first interfacing with react client 
@@ -26,17 +27,19 @@ SPOTIFY_SCOPES = 'user-read-email user-read-private user-top-read user-read-rece
 json_file_path ='access_token.json'
 
 #define function for each auth purpose
-@etl.route('/')
+@etl.route('/', methods=['POST'])
+@jwt_required_custom
 def run_etl():
+    from models.user import Account 
+    from models.token import Token  
+    from models.profile import Profile
+
+    from app import db
     try:
-        token_client = request.headers.get('Authorization').split()[1]
-        payload= verify_token(token_client)
-        print(payload['email'])
-        with open(json_file_path, 'r') as json_file:
-            user_token = json.load(json_file)
-            access_token= user_token[payload['reference_token']]
-            print(access_token)
-            response = Load_sqlite(access_token)
+        token_client = get_jwt_identity()
+        token = db.session.query(Token).filter_by(username=token_client.get('username')).first()
+        profile = db.session.query(Profile).filter_by(username=token_client.get('username')).first()
+        response = Load_PSQL(token.access_token, profile.spotifyid)
         if response.json["code"]==200:
              return jsonify({'message': 'ETL completed, time to go query', 'code': 200})
         else:
