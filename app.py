@@ -12,6 +12,7 @@ from db_query import db_query
 from etl import etl
 
 from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager
 
 load_dotenv()
 
@@ -22,6 +23,8 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    'for logging'
     # app.config['SQLALCHEMY_ECHO'] = True
 
     # Import and register blueprints here
@@ -37,14 +40,12 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
+    jwt = JWTManager(app)
     with app.app_context():
         try:
             db.init_app(app)
             from app import db
-
             db.create_all()
-
-            # Commit the changes to the database
             db.session.commit()
         except Exception as e:
             print(e)
