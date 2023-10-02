@@ -14,6 +14,8 @@ from utils.utils import *
 from models.user import Account 
 from models.token import Token  
 from models.profile import Profile
+from models.songs import MyPlayedTrack
+from models.metrics import Metric
 
 from app import db
 from utils.utils import jwt_required_custom
@@ -108,6 +110,7 @@ def callback():
         new_token = Token(
             access_token=access_token,
             refresh_token=refresh_token,
+            username = username,
             user_id=account.id
         )
         db.session.add(new_token)
@@ -125,7 +128,7 @@ def callback():
     if not profile:
         new_profile = Profile(
             spotifyid=user_data.get("id"),
-            email = user_data.get("id"),
+            email = user_data.get("email"),
             username = account.username
         )
         db.session.add(new_profile)

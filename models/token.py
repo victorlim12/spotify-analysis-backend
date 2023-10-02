@@ -6,8 +6,10 @@ class Token(db.Model):
     access_token = db.Column(db.String(255), nullable=False)
     refresh_token = db.Column(db.String(255), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('Account.id'), nullable=False)
+    username = db.Column(db.String(80), db.ForeignKey('Account.username'), unique=True, nullable=False)
     
-    def __init__(self, access_token, refresh_token, user_id):
+    def __init__(self, access_token, refresh_token, user_id, username):
         self.access_token = access_token
         self.refresh_token = refresh_token
         self.user_id = user_id
+        self.username= username

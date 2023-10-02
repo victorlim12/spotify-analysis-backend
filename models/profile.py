@@ -3,7 +3,7 @@ from app import db
 class Profile(db.Model):
     __tablename__ = 'Profile'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.Integer, db.ForeignKey('account.username'), unique=True, nullable=False)
+    username = db.Column(db.String(80), db.ForeignKey('Account.username'), unique=True, nullable=False)
     spotifyid = db.Column(db.String(255), unique=True)  # Assuming Spotify IDs are strings
     email = db.Column(db.String(255), unique=True)
 
