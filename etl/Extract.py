@@ -61,7 +61,6 @@ def get_listen_history(token, spotifyid):
         "song_id": song_id,
     }
     song_df = pd.DataFrame(song_dict, columns = ["song_name", "artist_name", "played_at", "timestamp","spotifyid", "song_id"])
-    print(song_df)
     return song_df
 
 #to create dataframe for song metrics

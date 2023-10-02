@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import jwt
 import json
 import secrets
+from datetime import datetime
 
 ##import utils for decode
 from utils.utils import *
@@ -92,6 +93,7 @@ def callback():
     response = requests.post(token_url, data=data)
     token_data = response.json()
 
+    print(token_data)
     access_token = token_data['access_token']
     refresh_token = token_data.get('refresh_token', None)
 
@@ -108,6 +110,7 @@ def callback():
     else:
         # If no existing token found, create a new one
         new_token = Token(
+            token_expiration = datetime.now() + timedelta(seconds=token_data.get('expires_in')),
             access_token=access_token,
             refresh_token=refresh_token,
             username = username,

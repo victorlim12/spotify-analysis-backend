@@ -37,9 +37,10 @@ def run_etl():
     from app import db
     try:
         token_client = get_jwt_identity()
-        token = db.session.query(Token).filter_by(username=token_client.get('username')).first()
+        token = db.session.query(Token).filter_by(username=token_client.get('username')).first()        
         profile = db.session.query(Profile).filter_by(username=token_client.get('username')).first()
-        response = Load_PSQL(token.access_token, profile.spotifyid)
+        access_token = refresh_access_token(token)
+        response = Load_PSQL(access_token, profile.spotifyid)
         if response.json["code"]==200:
              return jsonify({'message': 'ETL completed, time to go query', 'code': 200})
         else:
