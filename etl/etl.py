@@ -18,14 +18,6 @@ from etl.Load_psql import Load_PSQL
 ##AUTH route is mainly for spotify interfacing for oAuthV2 --> first interfacing with react client 
 etl = Blueprint('etl', __name__)
 
-#get data from config
-PORT= os.getenv("FLASK_PORT")
-SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
-SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
-SPOTIFY_REDIRECT_URI = f"http://localhost:{PORT}/auth/callback"
-SPOTIFY_SCOPES = 'user-read-email user-read-private user-top-read user-read-recently-played'  # Add other scopes if needed
-json_file_path ='access_token.json'
-
 #define function for each auth purpose
 @etl.route('/', methods=['POST'])
 @jwt_required_custom

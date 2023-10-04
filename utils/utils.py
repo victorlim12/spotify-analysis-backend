@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import requests
 
 JWT_SECRET_KEY= os.getenv('JWT_SECRET_KEY')
+SPOTIFY_CLIENT_ID = os.getenv ('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = os.getenv ('SPOTIFY_CLIENT_SECRET')
 
 def generate_token(payload):
     token = jwt.encode(payload,JWT_SECRET_KEY, algorithm='HS256')
@@ -47,9 +49,12 @@ def refresh_access_token(token_record):
     data = {
         "grant_type": "refresh_token",
         "refresh_token": token_record.refresh_token,
+        "client_id": SPOTIFY_CLIENT_ID,
+        "client_secret": SPOTIFY_CLIENT_SECRET,
     }
 
     response = requests.post(token_url, data=data)
+    print(response)
 
     if response.status_code == 200:
         token_data = response.json()
